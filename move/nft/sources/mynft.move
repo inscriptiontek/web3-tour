@@ -18,7 +18,6 @@ module nft::mynft {
         id: UID,
         name: String,
         description: String,
-        image_url:  String,
     }
 
     // ====== events ======
@@ -37,32 +36,23 @@ module nft::mynft {
     fun init(otw: MYNFT, ctx: &mut sui::tx_context::TxContext) {
         let keys = vector[
             utf8(b"name"),
-            utf8(b"link"),
             utf8(b"image_url"),
-            utf8(b"description"),
             utf8(b"project_url"),
-            utf8(b"creator"),
         ];
 
         let values = vector[
-            // For `name` we can use the `Hero.name` property
+            // For `name` we can use the `Github.name` property
             utf8(b"{name}"),
-            // For `link` we can build a URL using an `id` property
-            utf8(b"https://sui-heroes.io/hero/{id}"),
-            // For `image_url` we use an IPFS template + `image_url` property.
-            utf8(b"ipfs://{image_url}"),
-            // Description is static for all `Hero` objects.
-            utf8(b"A true Hero of the Sui ecosystem!"),
+            // Image URL wo can use the `Github.name` property
+            utf8(b"https://github.com/{name}.png"),
             // Project URL is usually static
-            utf8(b"https://sui-heroes.io"),
-            // Creator field can be any
-            utf8(b"Unknown Sui Fan")
+            utf8(b"https://github.com"),
         ];
 
         let publisher = package::claim(otw, ctx);
         let display = display::new_with_fields<NFT>(&publisher, keys, values,ctx);
 
-        // Commit first version of Display to apply changes.
+        // update version to 1
         display::update_version(&mut display);
 
         transfer::public_transfer(publisher, tx_context::sender(ctx));
@@ -70,13 +60,12 @@ module nft::mynft {
     }
 
     // every one can mint
-    public entry fun mint(name: String,description: String, image_url: String, ctx: &mut TxContext) {
+    public entry fun mint(name: String,description: String, ctx: &mut TxContext) {
         let sender = tx_context::sender(ctx);
         let nft = NFT{
             id: object::new(ctx),
             name,
             description,
-            image_url,
         };
 
         event::emit(MintNFT{
@@ -90,7 +79,7 @@ module nft::mynft {
 
 
     public entry fun burn(nft: NFT, ctx: &mut TxContext) {
-        let NFT{id,name:_, description:_, image_url:_} = nft;
+        let NFT{id,name:_, description:_} = nft;
 
         event::emit(BrunNFT{
             object_id: object::uid_to_inner(&id),
@@ -98,9 +87,5 @@ module nft::mynft {
         });
 
         object::delete(id)
-    }
-
-    fun f() {
-
     }
 }
